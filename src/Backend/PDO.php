@@ -102,7 +102,7 @@ trait PDO {
             }
     }
 
-    public function toSQL (stdClass|null $object = null, string $join = 'AND', int $deep = 0) {
+    public function toPDO (stdClass|null $object = null, string $join = 'AND', int $deep = 0) {
         $object = $object ?? $this->search;
         $phCount = 0;
         $placeholders = [];
