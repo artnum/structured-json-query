@@ -2,6 +2,7 @@
     "type": "library",
     "name": "artnum/structured-json-query",
     "description": "Convert a specific JSON structure to a SQL query or LDAP filter",
+    "license": "MIT",
     "keywords": ["json", "sql", "ldap", "query"],
     "authors": [
         {
