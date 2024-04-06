@@ -11,13 +11,17 @@ class STQuery
     
     protected stdClass $search;
     protected string $fieldPrefix = '';
+    protected array $fieldsMap = [];
 
-    public function __construct() 
+    public function __construct($fieldsMap = []) 
     {
+        $this->fieldsMap = $fieldsMap;
+        return $this;
     }
 
     public function setSearch (stdClass $search) {
         $this->search = $search;
+        return $this;
     }
 
     public function getSearch () {

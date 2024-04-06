@@ -108,10 +108,50 @@ trait PDO {
         $placeholders = [];
         $predicats = [];
         foreach ($object as $key => $value) {
-            if (!is_object($value)) {
-                $value = (object) ['value' => $value, 'operator' => '=', 'type' => 'str'];
-            }
             $key = explode(':', $key)[0];
+
+            $operator = '=';
+            if (str_starts_with($key, '~')) {
+                $key = substr($key, 1);
+                $operator = 'like';
+            }
+            if (str_starts_with($key, '!~')) {
+                $key = substr($key, 2);
+                $operator = 'notlike';
+            }
+            if (str_starts_with($key, '!=')) {
+                $key = substr($key, 2);
+                $operator = 'ne';
+            }
+            if (str_starts_with($key, '<>')) {
+                $key = substr($key, 2);
+                $operator = 'ne';
+            }
+            if (str_starts_with($key, '>=')) {
+                $key = substr($key, 2);
+                $operator = 'ge';
+            }
+            if (str_starts_with($key, '<=')) {
+                $key = substr($key, 2);
+                $operator = 'le';
+            }
+            if (str_starts_with($key, '>')) {
+                $key = substr($key, 1);
+                $operator = 'gt';
+            }
+            if (str_starts_with($key, '<')) {
+                $key = substr($key, 1);
+                $operator = 'lt';
+            }
+
+            if (!is_object($value)) {
+                $value = (object) ['value' => $value, 'operator' => $operator, 'type' => 'str'];
+            } else {
+                if (empty($value->operator)) {
+                    $value->operator = $operator;
+                }
+            }
+            
             switch (strtolower($key)) {
                 case '#and':
                 case '#or':
@@ -142,6 +182,9 @@ trait PDO {
             $field = $key;
             if (!empty($this->fieldPrefix)) {
                 $field = $this->fieldPrefix . $field;
+            }
+            if ($this->fieldsMap[$key] ?? false) {
+                $field = $this->fieldsMap[$key];
             }
             $predicats[] = $field . ' ' . $operator. ' ' . $placeholder;
         }

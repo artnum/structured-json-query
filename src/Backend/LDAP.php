@@ -10,6 +10,9 @@ trait LDAP {
         if (!empty($this->fieldPrefix)) {
             $field = $this->fieldPrefix . $field;
         }
+        if ($this->fieldsMap[$field] ?? false) {
+            $field = $this->fieldsMap[$field];
+        }
         $field = ldap_escape($field, '', LDAP_ESCAPE_FILTER);
         switch ($operator) {
             default: return null;
@@ -23,6 +26,9 @@ trait LDAP {
     private function ldapPredicat (string $operator, string $field, string $value) {
         if (!empty($this->fieldPrefix)) {
             $field = $this->fieldPrefix . $field;
+        }
+        if ($this->fieldsMap[$field] ?? false) {
+            $field = $this->fieldsMap[$field];
         }
         $field = ldap_escape($field, '', LDAP_ESCAPE_FILTER);
         switch(strtolower($operator)) {
@@ -66,8 +72,48 @@ trait LDAP {
         $fieldInThisLevel = false;
 
         foreach ($object as $key => $value) {
+            $key = explode(':', $key)[0];
+            
+            $operator = '=';
+            if (str_starts_with($key, '~')) {
+                $key = substr($key, 1);
+                $operator = 'like';
+            }
+            if (str_starts_with($key, '!~')) {
+                $key = substr($key, 2);
+                $operator = 'notlike';
+            }
+            if (str_starts_with($key, '!=')) {
+                $key = substr($key, 2);
+                $operator = 'ne';
+            }
+            if (str_starts_with($key, '<>')) {
+                $key = substr($key, 2);
+                $operator = 'ne';
+            }
+            if (str_starts_with($key, '>=')) {
+                $key = substr($key, 2);
+                $operator = 'ge';
+            }
+            if (str_starts_with($key, '<=')) {
+                $key = substr($key, 2);
+                $operator = 'le';
+            }
+            if (str_starts_with($key, '>')) {
+                $key = substr($key, 1);
+                $operator = 'gt';
+            }
+            if (str_starts_with($key, '<')) {
+                $key = substr($key, 1);
+                $operator = 'lt';
+            }
+
             if (!is_object($value)) {
-                $value = (object) ['value' => $value, 'operator' => '=', 'type' => 'str'];
+                $value = (object) ['value' => $value, 'operator' => $operator, 'type' => 'str'];
+            } else {
+                if (empty($value->operator)) {
+                    $value->operator = $operator;
+                }
             }
             $key = explode(':', $key)[0];
             switch (strtolower($key)) {
@@ -87,6 +133,12 @@ trait LDAP {
         }
         if ($deep === 0 && $fieldInThisLevel === false) {
             return implode('', $predicats);
+        }
+        if (count($predicats) === 0) {
+            return '(objectClass=*)';
+        }
+        if (count($predicats) === 1) {
+            return $predicats[0];
         }
         return '(' . $join . '' . implode('', $predicats) . ')';
     }
