@@ -13,9 +13,22 @@ class STQuery
     protected string $fieldPrefix = '';
     protected array $fieldsMap = [];
 
-    public function __construct($fieldsMap = []) 
+    /**
+     * Constructor
+     * @param null|array|stdClass $searchOrFieldsMap stdClass search object, array  fields map
+     * @param null|array $fieldsMap 
+     * @return $this 
+     */
+    public function __construct(array|stdClass|null $searchOrFieldsMap = null,  ?array $fieldsMap = null) 
     {
-        $this->fieldsMap = $fieldsMap;
+        if (is_array($searchOrFieldsMap)) {
+            $this->fieldsMap = $searchOrFieldsMap;
+        } else if (is_object($searchOrFieldsMap)) {
+            $this->search = $searchOrFieldsMap;
+            if ($fieldsMap) {
+                $this->fieldsMap = $fieldsMap;
+            }
+        }
         return $this;
     }
 
